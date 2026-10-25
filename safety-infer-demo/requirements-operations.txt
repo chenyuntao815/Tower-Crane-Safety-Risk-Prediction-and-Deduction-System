@@ -1,0 +1,9 @@
+# Minimal runtime for /twin/ and /twin/legacy.html (Python 3.11).
+# Neo4j's Python driver is imported by the API; a running database is optional.
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+neo4j==5.13.0
+numpy>=1.24,<2
+python-dotenv==1.0.0
+openai>=2.0.0,<4.0.0

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>塔吊数字孪生 · 安全风险推演</title>
+  <link rel="stylesheet" href="/twin/styles.css?v=2">
+  <script type="importmap">
+    {"imports":{"three":"/twin/vendor/package/build/three.module.mjs","three/addons/":"/twin/vendor/package/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon">T</span><div><strong>塔吊数字孪生</strong><small>安全风险预测与推演</small></div></div>
+    <div class="top-right"><span class="pill">示范参数 · 未校准</span><span id="graphSource" class="source">图谱连接中</span></div>
+  </header>
+  <main class="layout">
+    <aside class="panel controls">
+      <div class="section-title"><span>01 / 工况输入</span><h2>参数与工序</h2></div>
+      <form id="controls">
+        <div class="field"><label for="load_t">吊重 <span>t</span></label><input id="load_t" type="number" min="0" max="30" step="0.1" value="5"></div>
+        <div class="field"><label for="radius_m">幅度 <span>m</span></label><input id="radius_m" type="number" min="2" max="80" step="0.5" value="35"></div>
+        <div class="field"><label for="wind_m_s">风速 <span>m/s</span></label><input id="wind_m_s" type="number" min="0" max="40" step="0.5" value="8"></div>
+        <div class="field"><label for="slew_deg">回转角 <span>°</span></label><input id="slew_deg" type="number" min="-360" max="360" step="1" value="35"></div>
+        <div class="field"><label for="event">工序事件</label><select id="event"><option value="normal">正常吊装</option><option value="jacking">顶升</option><option value="attach">安装附着</option><option value="dismantle">拆卸</option></select></div>
+        <details class="advanced"><summary>设备示范参数 <span>可编辑</span></summary>
+          <div class="field"><label for="tower_height_m">塔高 <span>m</span></label><input id="tower_height_m" type="number" min="12" max="120" value="48"></div>
+          <div class="field"><label for="jib_length_m">臂长 <span>m</span></label><input id="jib_length_m" type="number" min="15" max="80" value="55"></div>
+          <div class="field"><label for="attachment_heights_m">附着高度 <span>m，逗号分隔</span></label><input id="attachment_heights_m" type="text" value="18,36"></div>
+          <div class="field"><label for="mast_ei_kn_m2">塔身 EI <span>kN·m²</span></label><input id="mast_ei_kn_m2" type="number" min="1" value="2500000"></div>
+          <div class="field"><label for="rated_moment_kn_m">额定力矩 <span>kN·m</span></label><input id="rated_moment_kn_m" type="number" min="1" value="2400"></div>
+          <div class="field"><label for="mast_moment_capacity_kn_m">塔身弯矩限值 <span>kN·m</span></label><input id="mast_moment_capacity_kn_m" type="number" min="1" value="3000"></div>
+          <div class="field"><label for="attachment_capacity_kn">附着轴力限值 <span>kN</span></label><input id="attachment_capacity_kn" type="number" min="1" value="180"></div>
+          <div class="field"><label for="attachment_lever_arm_m">附着等效力臂 <span>m</span></label><input id="attachment_lever_arm_m" type="number" min="0.1" step="0.1" value="5"></div>
+          <div class="field"><label for="rated_load_t">额定吊重 <span>t</span></label><input id="rated_load_t" type="number" min="0.1" value="12"></div>
+          <div class="field"><label for="max_free_height_m">自由高度限值 <span>m</span></label><input id="max_free_height_m" type="number" min="0.1" value="25"></div>
+          <div class="field"><label for="projected_area_m2">迎风面积 <span>m²</span></label><input id="projected_area_m2" type="number" min="0.1" value="85"></div>
+          <div class="field"><label for="drag_coefficient">风阻系数</label><input id="drag_coefficient" type="number" min="0.1" step="0.1" value="1.3"></div>
+        </details>
+        <button class="primary" type="submit">运行情景推演 <span>↗</span></button>
+      </form>
+      <p id="error" class="error" role="alert" hidden></p>
+      <div class="mapping"><h3>图谱指标映射</h3><div id="mappingList"></div></div>
+    </aside>
+
+    <section class="center">
+      <div class="section-title scene-heading"><div><span>02 / 结构场景</span><h2>塔机三维模型</h2></div><span class="view-hint">拖动旋转 · 滚轮缩放 · 点击构件</span></div>
+      <div class="viewport"><div id="scene"></div><div id="sceneStatus" class="scene-status">正在加载三维模型…</div><div class="viewport-label">TC-01 / 结构示意模型</div><div class="legend"><div><i class="swatch safe"></i>利用率 &lt; 70%</div><div><i class="swatch caution"></i>70–100%</div><div><i class="swatch danger"></i>≥ 100%</div><div><i class="swatch ghost"></i>未来位置虚影</div></div></div>
+      <div class="timeline"><div class="timeline-head"><strong>推演时间</strong><div><button id="playButton" type="button">▶ 播放</button><span id="timeLabel">0 / 60 s</span></div></div><input id="timeSlider" type="range" min="0" max="12" step="1" value="0"><div class="timeline-notes"><span>当前</span><span>未来 60 s</span></div></div>
+      <div id="inspector" class="inspector"><div class="inspector-kicker">构件受力</div><strong>点击塔吊构件查看详情</strong><span>颜色只对应结构利用率</span></div>
+    </section>
+
+    <aside class="panel results"><div class="section-title"><span>03 / 推演输出</span><h2>结构与风险</h2></div>
+      <div class="metrics"><div><small>塔顶位移</small><strong id="mDisp">—</strong><em>mm</em></div><div><small>关键弯矩</small><strong id="mMoment">—</strong><em>kN·m</em></div><div><small>附着轴力</small><strong id="mAxial">—</strong><em>kN</em></div><div class="risk-metric"><small>贝叶斯情景概率</small><strong id="mRisk">—</strong><em>聚合风险</em></div></div>
+      <div class="chart"><div class="chart-head"><strong>塔顶位移</strong><span>mm</span></div><svg id="chartDisp" viewBox="0 0 300 76" preserveAspectRatio="none"></svg></div>
+      <div class="chart"><div class="chart-head"><strong>关键弯矩</strong><span>kN·m</span></div><svg id="chartMoment" viewBox="0 0 300 76" preserveAspectRatio="none"></svg></div>
+      <div class="chart"><div class="chart-head"><strong>附着轴力</strong><span>kN</span></div><svg id="chartAxial" viewBox="0 0 300 76" preserveAspectRatio="none"></svg></div>
+      <div class="chart"><div class="chart-head"><strong>贝叶斯风险概率</strong><span>%</span></div><svg id="chartRisk" viewBox="0 0 300 76" preserveAspectRatio="none"></svg></div>
+      <div class="risk-list"><h3>当前主要风险</h3><div id="riskList"></div></div>
+    </aside>
+
+    <section class="bottom"><div class="section-title"><span>04 / 干预比较</span><h2>未来 60 秒措施比较</h2></div><div id="scenarioCards" class="scenario-cards"></div><div class="advice"><div><span class="ai-mark">✳</span><strong>DeepSeek 决策建议</strong><small>基于三种情景和图谱风险</small></div><button id="adviceButton" type="button">生成 AI 建议 ↗</button><div id="adviceContent" class="advice-content">运行推演后可生成针对当前工况的建议。</div></div><p class="disclaimer">本页为可编辑示范模型：结构响应采用简化梁模型，风险概率由图谱关系作 noisy-OR 情景合成；均未用设备图纸、载荷试验或事故数据校准，不用于现场作业许可或结构验算。</p></section>
+  </main>
+  <script type="module" src="/twin/main.mjs?v=3"></script>
+  <script>
+    window.addEventListener('error', function (event) {
+      if (window.__twinReady) return;
+      const status = document.getElementById('sceneStatus');
+      if (status) status.textContent = '三维引擎加载失败：' + (event.message || '请刷新页面并检查浏览器控制台');
+    }, true);
+    setTimeout(function () {
+      if (window.__twinReady) return;
+      const status = document.getElementById('sceneStatus');
+      if (status) status.textContent = '三维引擎未启动。请检查本地 /twin/vendor/ 资源或浏览器 WebGL 设置。';
+    }, 5000);
+  </script>
+</body>
+</html>

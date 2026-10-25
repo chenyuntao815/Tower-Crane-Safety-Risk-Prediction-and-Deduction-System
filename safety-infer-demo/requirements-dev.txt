@@ -1,0 +1,3 @@
+-r requirements.txt
+# Compatible with the FastAPI/Starlette TestClient versions in requirements.txt.
+httpx>=0.27,<0.28

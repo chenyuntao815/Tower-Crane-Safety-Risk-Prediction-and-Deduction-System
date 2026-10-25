@@ -1,0 +1,36 @@
+# FastAPI and Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Neo4j Database
+neo4j==5.13.0
+
+# Frontend UI
+streamlit==1.28.1
+streamlit-option-menu==0.3.2
+
+# Visualization
+plotly==5.17.0
+pyvis==0.3.2
+pandas==2.1.3
+numpy>=1.24,<2
+
+# HTTP Requests
+requests==2.31.0
+
+# LLM Integration (DeepSeek uses the OpenAI-compatible SDK)
+openai>=2.0.0,<4.0.0
+
+# Development and Utilities
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Optional: For local LLM support (Ollama)
+# ollama  # Uncomment if using local Ollama
+
+# Optional: Development dependencies
+# pytest==7.4.3
+# black==23.11.0
+# flake8==6.1.0
